@@ -1,0 +1,12 @@
+<h2>home page!</h2>
+
+
+@if (health){
+    <p>Status:{{health.status}}</p>
+    <p>App:{{health.app}}</p>
+    <p>Time:{{health.timestamp}}</p>
+}
+
+@if(error){
+    <p style="color: red;">{{error}}</p>
+}
