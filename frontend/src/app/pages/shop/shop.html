@@ -1,1 +1,33 @@
-<h2>shop page!</h2>
+<h2>Shop</h2>
+
+@if (isLoading) {
+  <p>Učitavanje proizvoda...</p>
+}
+
+@if (!isLoading && error) {
+  <p style="color: red;">{{ error }}</p>
+}
+
+@if (!isLoading && !error && products.length === 0) {
+  <p>Trenutno nema proizvoda.</p>
+}
+
+@if (!isLoading && !error && products.length > 0) {
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;">
+    @for (p of products; track p.id) {
+      <article style="border:1px solid #ddd;border-radius:12px;padding:12px;">
+        <img
+          [src]="p.imageUrl"
+          [alt]="p.name"
+          style="width:100%;height:140px;object-fit:cover;border-radius:8px;"
+        />
+        <h3 style="margin:10px 0 6px;">{{ p.name }}</h3>
+        <p style="margin:0 0 6px;color:#666;">{{ p.categoryName }}</p>
+        <p style="margin:0 0 8px;"><strong>{{ p.price | currency:'EUR' }}</strong></p>
+        <p style="margin:0 0 10px;">Stock: {{ p.stock }}</p>
+
+        <a [routerLink]="['/product', p.id]">Detalji</a>
+      </article>
+    }
+  </div>
+}

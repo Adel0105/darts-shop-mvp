@@ -93,5 +93,11 @@ app.MapGet("/api/products/{id:int}", async (int id, AppDbContext db) =>
     return product is null ? Results.NotFound() : Results.Ok(product);
 });
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await db.Database.MigrateAsync();
+    await SeedData.EnsureSeededAsync(db);
+}
 
 app.Run();
