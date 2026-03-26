@@ -12,3 +12,6 @@ frontend/.angular/
 .vs/
 .DS_Store
 Thumbs.db
+
+**/*.csproj.user
+backend/appsettings.Development.json
