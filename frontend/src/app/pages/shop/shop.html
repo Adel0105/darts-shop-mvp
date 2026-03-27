@@ -1,5 +1,40 @@
 <h2>Shop</h2>
 
+<div style="display: flex;gap: 10px;align-items: center;margin-bottom: 14px;">
+  <label for="category">Kategorija:</label>
+    <label for="sort">Sort:</label>
+      <select
+        id="sort"
+        [value]="sortOption"
+        (change)="onSortChange($any($event.target).value)"
+      >
+        <option value="none">Bez sortiranja</option>
+        <option value="priceAsc">Cijena: niža -> viša</option>
+        <option value="priceDesc">Cijena: viša -> niža</option>
+        <option value="nameAsc">Naziv: A-Z</option>
+      </select>
+
+  <select name="" id="category" [value]="selectedCategoryId ?? ''"
+  (change)="onCategoryChange($any($event.target).value)">
+    <option value="">Sve kategorije</option>
+      @for (c of categories; track c.id)
+      { <option [value]="c.id">{{c.name}}</option> }
+  </select>
+<label for="search">Search:</label>
+  <input
+    id="search"
+    type="text"
+    placeholder="Naziv proizvoda"
+    [value]="searchText"
+    (input)="onSearchChange($any($event.target).value)"
+  />
+  <button type="button" (click)="clearCategoryFilter()">Clear</button>
+</div>
+@if (!isLoading && !error) {
+  <p style="margin: 6px 0 14px; color: #666;">
+    Prikazano proizvoda: {{ filteredProducts.length }}
+  </p>
+}
 @if (isLoading) {
   <p>Učitavanje proizvoda...</p>
 }
@@ -8,13 +43,13 @@
   <p style="color: red;">{{ error }}</p>
 }
 
-@if (!isLoading && !error && products.length === 0) {
-  <p>Trenutno nema proizvoda.</p>
+@if (!isLoading && !error && filteredProducts.length === 0) {
+  <p>>Nema rezultata za trenutni filter/search. Pokušaj Clear.</p>
 }
 
-@if (!isLoading && !error && products.length > 0) {
+@if (!isLoading && !error && filteredProducts.length > 0) {
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;">
-    @for (p of products; track p.id) {
+    @for (p of filteredProducts; track p.id) {
       <article style="border:1px solid #ddd;border-radius:12px;padding:12px;">
         <img
           [src]="p.imageUrl"
