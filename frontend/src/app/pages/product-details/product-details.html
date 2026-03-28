@@ -1,1 +1,45 @@
-<h2>product-details page!</h2>
+<p><a routerLink="/shop">← Nazad u Shop</a></p>
+
+@if (isLoading) {
+  <p>Učitavanje...</p>
+}
+
+@if (!isLoading && notFound) {
+  <p>Proizvod nije pronađen.</p>
+}
+
+@if (!isLoading && error) {
+  <p style="color: red;">{{ error }}</p>
+}
+
+@if (!isLoading && product) {
+  <article style="max-width: 720px;">
+    <img
+      [src]="product.imageUrl"
+      [alt]="product.name"
+      style="width: 100%; max-height: 360px; object-fit: cover; border-radius: 12px;"
+    />
+    <h1 style="margin-top: 16px;">{{ product.name }}</h1>
+    <p style="color: #666;">{{ product.categoryName }}</p>
+    <p><strong>{{ product.price | currency: 'EUR' }}</strong></p>
+    <p>Na stanju: {{ product.stock }}</p>
+    <p>{{ product.description }}</p>
+  </article>
+
+
+  <div style="margin-top: 16px;">
+  <button
+    type="button"
+    (click)="addToCart()"
+    [disabled]="product.stock < 1"
+  >
+    Dodaj u korpu
+  </button>
+  <p style="margin-top: 12px;">
+  <a routerLink="/cart">Otvori korpu</a>
+</p>
+  @if (product.stock < 1) {
+    <p style="color: #666; margin-top: 8px;">Nema na stanju.</p>
+  }
+</div>
+}

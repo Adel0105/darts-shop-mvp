@@ -1,1 +1,61 @@
-<p>cart works!</p>
+<h2>Korpa</h2>
+
+<p><a routerLink="/shop">← Nazad u Shop</a></p>
+
+@if (cartService.lines().length === 0) {
+  <p>Korpa je prazna.</p>
+  <p><a routerLink="/shop">Idi u Shop</a></p>
+} @else {
+  <ul style="list-style: none; padding: 0; max-width: 640px;">
+    @for (line of cartService.lines(); track line.productId) {
+      <li
+        style="display: flex; gap: 12px; align-items: center; border: 1px solid #ddd; border-radius: 12px; padding: 12px; margin-bottom: 12px;"
+      >
+        <img
+          [src]="line.imageUrl"
+          [alt]="line.name"
+          style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;"
+        />
+        <div style="flex: 1;">
+          <strong>{{ line.name }}</strong>
+          <div style="color: #666; font-size: 14px;">
+            {{ line.unitPrice | currency: 'EUR' }} × {{ line.quantity }}
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button
+            type="button"
+            (click)="dec(line.productId, line.quantity)"
+            aria-label="Smanji"
+          >
+            −
+          </button>
+          <span>{{ line.quantity }}</span>
+          <button
+            type="button"
+            (click)="inc(line.productId, line.quantity, line.maxStock)"
+            [disabled]="line.quantity >= line.maxStock"
+            aria-label="Povećaj"
+          >
+            +
+          </button>
+          <button type="button" (click)="remove(line.productId)">Ukloni</button>
+        </div>
+      </li>
+    }
+  </ul>
+
+  <p style="font-size: 18px;">
+    <strong>Ukupno: {{ cartService.subtotal() | currency: 'EUR' }}</strong>
+  </p>
+
+  <p>
+    <a
+      routerLink="/checkout"
+      [style.pointer-events]="cartService.lines().length === 0 ? 'none' : 'auto'"
+      [style.opacity]="cartService.lines().length === 0 ? '0.5' : '1'"
+    >
+      Na checkout
+    </a>
+  </p>
+}
