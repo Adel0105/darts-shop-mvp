@@ -1,6 +1,7 @@
 using backend.Data;
 using backend.Dtos;
 using Microsoft.EntityFrameworkCore;
+using backend.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -99,5 +100,90 @@ using (var scope = app.Services.CreateScope())
     await db.Database.MigrateAsync();
     await SeedData.EnsureSeededAsync(db);
 }
+
+app.MapPost("/api/orders", async (CreateOrderDto dto, AppDbContext db) =>
+{
+    if (string.IsNullOrWhiteSpace(dto.CustomerName) ||
+        string.IsNullOrWhiteSpace(dto.Phone) ||
+        string.IsNullOrWhiteSpace(dto.Address) ||
+        string.IsNullOrWhiteSpace(dto.City))
+    {
+        return Results.BadRequest(new { message = "Sva polja su obavezna." });
+    }
+
+    if (dto.Items is null || dto.Items.Count == 0)
+    {
+        return Results.BadRequest(new { message = "Narudžba mora imati barem jednu stavku." });
+    }
+
+    // isti ProductId više puta u payloadu -> zbroji kolièine
+    var lines = dto.Items
+        .GroupBy(x => x.ProductId)
+        .Select(g => (ProductId: g.Key, Quantity: g.Sum(x => x.Quantity)))
+        .ToList();
+
+    foreach (var line in lines)
+    {
+        if (line.Quantity < 1)
+            return Results.BadRequest(new { message = "Neispravna kolièina." });
+    }
+
+    await using var tx = await db.Database.BeginTransactionAsync();
+
+    var order = new Order
+    {
+        CustomerName = dto.CustomerName.Trim(),
+        Phone = dto.Phone.Trim(),
+        Address = dto.Address.Trim(),
+        City = dto.City.Trim(),
+        CreatedAt = DateTime.UtcNow,
+        Status = OrderStatus.New,
+        Total = 0m
+    };
+
+    decimal total = 0m;
+
+    foreach (var line in lines)
+    {
+        var product = await db.Products.FirstOrDefaultAsync(p => p.Id == line.ProductId);
+        if (product is null)
+        {
+            await tx.RollbackAsync();
+            return Results.BadRequest(new { message = $"Nepoznat proizvod ID {line.ProductId}." });
+        }
+
+        if (product.Stock < line.Quantity)
+        {
+            await tx.RollbackAsync();
+            return Results.BadRequest(new { message = $"Nema dovoljno zaliha za: {product.Name}." });
+        }
+
+        var unitPrice = product.Price;
+        total += unitPrice * line.Quantity;
+
+        order.Items.Add(new OrderItem
+        {
+            ProductId = product.Id,
+            Quantity = line.Quantity,
+            UnitPrice = unitPrice
+        });
+
+        product.Stock -= line.Quantity;
+    }
+
+    order.Total = total;
+
+    db.Orders.Add(order);
+    await db.SaveChangesAsync();
+    await tx.CommitAsync();
+
+    return Results.Ok(new
+    {
+        order.Id,
+        order.Total,
+        order.CreatedAt,
+        order.Status
+    });
+});
 
 app.Run();
