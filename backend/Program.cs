@@ -1,6 +1,12 @@
 using backend.Data;
-using backend.Dtos;
 using Microsoft.EntityFrameworkCore;
+using System.IdentityModel.Tokens.Jwt;
+
+using System.Security.Claims;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using backend.Dtos;
 using backend.Models;
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,7 +27,37 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod();
     });
 });
+var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("Jwt:Key missing");
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "darts-shop-api";
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "darts-shop-client";
+var expiresMinutes = int.TryParse(builder.Configuration["Jwt:ExpiresMinutes"], out var m) ? m : 240;
 
+var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
+
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience,
+
+        ClockSkew = TimeSpan.Zero
+    };
+});
+
+builder.Services.AddAuthorization();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -29,7 +65,8 @@ var app = builder.Build();
 
 app.UseHttpsRedirection();
 app.UseCors("FrontendPolicy");
-
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapGet("/api/health", () =>
 {
     return Results.Ok(new
@@ -38,6 +75,44 @@ app.MapGet("/api/health", () =>
         timestamp = DateTime.UtcNow,
         app = "darts-shop-api"
     });
+});
+
+app.MapPost("/api/auth/login", (AdminLoginDto dto) =>
+{
+    // MVP: hardkodirani admin (kasnije može u Admin kontrolu/DB).
+    const string adminUsername = "admin";
+    const string adminPassword = "admin123"; 
+
+    if (dto is null || string.IsNullOrWhiteSpace(dto.Username) || string.IsNullOrWhiteSpace(dto.Password))
+        return Results.Unauthorized();
+
+    if (!string.Equals(dto.Username, adminUsername, StringComparison.Ordinal) ||
+        !string.Equals(dto.Password, adminPassword, StringComparison.Ordinal))
+    {
+        return Results.Unauthorized();
+    }
+
+    var claims = new[]
+    {
+        new Claim(ClaimTypes.NameIdentifier, adminUsername),
+        new Claim(ClaimTypes.Role, "Admin")
+    };
+
+    var tokenHandler = new JwtSecurityTokenHandler();
+    var securityToken = new JwtSecurityToken(
+        issuer: jwtIssuer,
+        audience: jwtAudience,
+        claims: claims,
+        expires: DateTime.UtcNow.AddMinutes(expiresMinutes),
+        signingCredentials: new SigningCredentials(
+            new SymmetricSecurityKey(keyBytes),
+            SecurityAlgorithms.HmacSha256
+        )
+    );
+
+    var token = tokenHandler.WriteToken(securityToken);
+
+    return Results.Ok(new { token });
 });
 
 app.MapGet("/api/categories", async (AppDbContext db) =>

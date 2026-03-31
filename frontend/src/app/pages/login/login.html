@@ -1,0 +1,23 @@
+<h2>Admin login</h2>
+
+<p><a routerLink="/">← Nazad</a></p>
+
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <div style="display: grid; gap: 12px; max-width: 420px;">
+    <label>
+      Username
+      <input type="text" formControlName="username" autocomplete="username" />
+    </label>
+
+    <label>
+      Password
+      <input type="password" formControlName="password" autocomplete="current-password" />
+    </label>
+
+    <button type="submit" [disabled]="isSubmitting">Login</button>
+  </div>
+</form>
+
+@if (error) {
+  <p style="color: red; margin-top: 12px;">{{ error }}</p>
+}

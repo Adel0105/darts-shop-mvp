@@ -4,6 +4,13 @@
   <a routerLink="/product/id">Product</a>
   <a routerLink="/cart">Cart</a>
   <a routerLink="/checkout">Checkout</a>
+  <a routerLink="/admin">Admin</a>
+
+  @if (auth.isLoggedIn()) {
+  <button type="button" (click)="logout()">Logout</button>
+} @else {
+  <a routerLink="/login">Login</a>
+}
 </nav>
 
 <router-outlet></router-outlet>
