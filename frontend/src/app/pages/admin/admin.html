@@ -1,2 +1,95 @@
 <h2>Admin panel</h2>
-<p>Zaštićena ruta. Ako vidiš ovu stranicu, login je aktivan.</p>
+<h2>Admin - Products</h2>
+
+@if (error) {
+  <p style="color: red;">{{ error }}</p>
+}
+@if (success) {
+  <p style="color: green;">{{ success }}</p>
+}
+
+<table border="1" cellpadding="8" cellspacing="0" style="width: 100%; max-width: 900px;">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Naziv</th>
+      <th>Cijena</th>
+      <th>Trenutni stock</th>
+      <th>Novi stock</th>
+      <th>Akcija</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (p of products; track p.id) {
+      <tr>
+        <td>{{ p.id }}</td>
+        <td>{{ p.name }}</td>
+        <td>{{ p.price }}</td>
+        <td>{{ p.stock }}</td>
+        <td>
+          <input
+            type="number"
+            min="0"
+            [value]="stockDraft[p.id]"
+            (input)="stockDraft[p.id] = +$any($event.target).value"
+          />
+        </td>
+        <td>
+        <button
+            type="button"
+            (click)="saveStock(p.id)"
+            [disabled]="+stockDraft[p.id] === +p.stock || isSavingStock[p.id]"
+            >
+            Sačuvaj
+        </button>
+        </td>
+      </tr>
+    }
+  </tbody>
+</table>
+
+<hr style="margin: 24px 0;" />
+
+<h3>Admin - Orders</h3>
+
+@if (orders.length === 0) {
+  <p>Nema narudžbi.</p>
+} @else {
+  <table border="1" cellpadding="8" cellspacing="0" style="width: 100%; max-width: 1000px;">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Kupac</th>
+        <th>Telefon</th>
+        <th>Grad</th>
+        <th>Total</th>
+        <th>Status</th>
+        <th>Akcija</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (o of orders; track o.id) {
+        <tr>
+          <td>{{ o.id }}</td>
+          <td>{{ o.customerName }}</td>
+          <td>{{ o.phone }}</td>
+          <td>{{ o.city }}</td>
+          <td>{{ o.total | number:'1.2-2' }}</td>
+          <td>
+            <select
+              [value]="statusDraft[o.id]"
+              (change)="statusDraft[o.id] = $any($event.target).value"
+            >
+              <option value="New">New</option>
+              <option value="Processing">Processing</option>
+              <option value="Done">Done</option>
+            </select>
+          </td>
+          <td>
+            <button type="button" (click)="saveOrderStatus(o.id)" [disabled]="statusDraft[o.id] === o.status">Sačuvaj</button>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}

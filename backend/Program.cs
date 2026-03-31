@@ -1,7 +1,7 @@
 using backend.Data;
 using Microsoft.EntityFrameworkCore;
 using System.IdentityModel.Tokens.Jwt;
-
+using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -260,5 +260,64 @@ app.MapPost("/api/orders", async (CreateOrderDto dto, AppDbContext db) =>
         order.Status
     });
 });
+
+//endpoint za update stocka 
+
+app.MapPatch("/api/admin/products/{id:int}/stock", [Authorize(Roles = "Admin")] async (int id, UpdateProductStockDto dto, AppDbContext db) =>
+{
+    if (dto.Stock < 0)
+        return Results.BadRequest(new { message = "Stock ne može biti negativan." });
+
+    var product = await db.Products.FirstOrDefaultAsync(p => p.Id == id);
+    if (product is null)
+        return Results.NotFound(new { message = "Proizvod nije pronaðen." });
+
+    product.Stock = dto.Stock;
+    await db.SaveChangesAsync();
+
+    return Results.Ok(new { product.Id, product.Stock });
+});
+
+app.MapGet("/api/admin/orders", [Authorize(Roles = "Admin")] async (AppDbContext db) =>
+{
+    var orders = await db.Orders
+        .AsNoTracking()
+        .Include(o => o.Items)
+        .OrderByDescending(o => o.CreatedAt)
+        .Select(o => new AdminOrderDto(
+            o.Id,
+            o.CustomerName,
+            o.Phone,
+            o.Address,
+            o.City,
+            o.CreatedAt,
+            o.Total,
+            o.Status.ToString(),
+            o.Items.Select(i => new AdminOrderItemDto(
+                i.ProductId,
+                i.Quantity,
+                i.UnitPrice
+            )).ToList()
+        ))
+        .ToListAsync();
+
+    return Results.Ok(orders);
+});
+
+app.MapPatch("/api/admin/orders/{id:int}/status", [Authorize(Roles = "Admin")] async (int id, UpdateOrderStatusDto dto, AppDbContext db) =>
+{
+    var order = await db.Orders.FirstOrDefaultAsync(o => o.Id == id);
+    if (order is null)
+        return Results.NotFound(new { message = "Narudžba nije pronaðena." });
+
+    if (!Enum.TryParse<OrderStatus>(dto.Status, true, out var parsedStatus))
+        return Results.BadRequest(new { message = "Neispravan status. Dozvoljeno: New, Processing, Done." });
+
+    order.Status = parsedStatus;
+    await db.SaveChangesAsync();
+
+    return Results.Ok(new { order.Id, Status = order.Status.ToString() });
+});
+
 
 app.Run();
