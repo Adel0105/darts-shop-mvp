@@ -1,12 +1,13 @@
-<h2>home page!</h2>
+<section class="hero">
+  <div class="hero__overlay" aria-hidden="true"></div>
 
+  <div class="hero__content">
+    <p class="hero__eyebrow">Darts Shop</p>
+    <h1 class="hero__title">Hit the bullseye. Gear up for your next game.</h1>
+    <p class="hero__subtitle">
+      Darts, boards, shafts, flights — everything you need to play, in one place.
+    </p>
 
-@if (health){
-    <p>Status:{{health.status}}</p>
-    <p>App:{{health.app}}</p>
-    <p>Time:{{health.timestamp}}</p>
-}
-
-@if(error){
-    <p style="color: red;">{{error}}</p>
-}
+    <a class="hero__cta" routerLink="/shop">Shop now</a>
+  </div>
+</section>

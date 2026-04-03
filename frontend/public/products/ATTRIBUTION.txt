@@ -1,0 +1,11 @@
+Product photos are sourced from Wikimedia Commons (free licenses).
+See each file’s origin below; keep this notice when redistributing.
+
+Sources (original filenames on Commons):
+- Darts assortment: File:Darts.jpg (CC BY-SA 3.0)
+- Steel darts set: File:Steeldarts.jpg (public domain)
+- Dartboard: File:Dartboard.jpg (CC BY-SA 3.0 / GFDL)
+- Parts of dart (flights, shafts, points): File:Parts of the dart arrow.jpeg (CC BY-SA / GFDL)
+- Electronic dartboard: File:Electronic dart board.jpg (CC BY-SA 3.0 / GFDL / CC BY 2.5)
+
+This shop reuses a small set of images across multiple SKU rows for similar items.

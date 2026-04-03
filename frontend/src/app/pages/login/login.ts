@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -24,6 +24,12 @@ export class Login {
   error = '';
   isSubmitting = false;
 
+  ngOnInit(): void {
+    if (this.auth.isLoggedIn()) {
+      void this.router.navigate(['/admin']);
+    }
+  }
+
   submit(): void {
     this.error = '';
     if (this.form.invalid) {
@@ -37,10 +43,10 @@ export class Login {
     this.auth.login(v.username, v.password).subscribe({
       next: () => {
         this.isSubmitting = false;
-        void this.router.navigate(['/']);
+        void this.router.navigate(['/admin']);
       },
       error: () => {
-        this.error = 'Pogrešan username ili password.';
+        this.error = 'Invalid username or password.';
         this.isSubmitting = false;
       },
     });

@@ -79,7 +79,7 @@ app.MapGet("/api/health", () =>
 
 app.MapPost("/api/auth/login", (AdminLoginDto dto) =>
 {
-    // MVP: hardkodirani admin (kasnije može u Admin kontrolu/DB).
+    // MVP: hardkodirani admin (kasnije mo?e u Admin kontrolu/DB).
     const string adminUsername = "admin";
     const string adminPassword = "admin123"; 
 
@@ -174,6 +174,7 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await db.Database.MigrateAsync();
     await SeedData.EnsureSeededAsync(db);
+    await SeedData.SyncProductImagesAsync(db);
 }
 
 app.MapPost("/api/orders", async (CreateOrderDto dto, AppDbContext db) =>
@@ -188,10 +189,10 @@ app.MapPost("/api/orders", async (CreateOrderDto dto, AppDbContext db) =>
 
     if (dto.Items is null || dto.Items.Count == 0)
     {
-        return Results.BadRequest(new { message = "Narudžba mora imati barem jednu stavku." });
+        return Results.BadRequest(new { message = "Narud?ba mora imati barem jednu stavku." });
     }
 
-    // isti ProductId više puta u payloadu -> zbroji kolièine
+    // isti ProductId vi?e puta u payloadu -> zbroji kolièine
     var lines = dto.Items
         .GroupBy(x => x.ProductId)
         .Select(g => (ProductId: g.Key, Quantity: g.Sum(x => x.Quantity)))
@@ -266,7 +267,7 @@ app.MapPost("/api/orders", async (CreateOrderDto dto, AppDbContext db) =>
 app.MapPatch("/api/admin/products/{id:int}/stock", [Authorize(Roles = "Admin")] async (int id, UpdateProductStockDto dto, AppDbContext db) =>
 {
     if (dto.Stock < 0)
-        return Results.BadRequest(new { message = "Stock ne može biti negativan." });
+        return Results.BadRequest(new { message = "Stock ne mo?e biti negativan." });
 
     var product = await db.Products.FirstOrDefaultAsync(p => p.Id == id);
     if (product is null)
@@ -304,11 +305,13 @@ app.MapGet("/api/admin/orders", [Authorize(Roles = "Admin")] async (AppDbContext
     return Results.Ok(orders);
 });
 
+
+
 app.MapPatch("/api/admin/orders/{id:int}/status", [Authorize(Roles = "Admin")] async (int id, UpdateOrderStatusDto dto, AppDbContext db) =>
 {
     var order = await db.Orders.FirstOrDefaultAsync(o => o.Id == id);
     if (order is null)
-        return Results.NotFound(new { message = "Narudžba nije pronaðena." });
+        return Results.NotFound(new { message = "Narud?ba nije pronaðena." });
 
     if (!Enum.TryParse<OrderStatus>(dto.Status, true, out var parsedStatus))
         return Results.BadRequest(new { message = "Neispravan status. Dozvoljeno: New, Processing, Done." });

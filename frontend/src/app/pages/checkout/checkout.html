@@ -1,59 +1,71 @@
-<h2>Checkout</h2>
+<section class="checkout-page">
+  <div class="checkout-page__inner">
+    <nav class="checkout-page__nav" aria-label="Breadcrumb">
+      <a routerLink="/cart" class="checkout-page__back">← Back to Cart</a>
+    </nav>
 
-<p><a routerLink="/cart">← Nazad u korpu</a></p>
+    <h1 class="checkout-page__title">{{ successMessage ? 'Thank you' : 'Checkout' }}</h1>
 
-@if (cartService.lines().length === 0) {
-  <p>Korpa je prazna.</p>
-  <p><a routerLink="/shop">Idi u Shop</a></p>
-} @else {
-  <p>Ukupno: <strong>{{ cartService.subtotal() | number: '1.2-2' }} EUR</strong></p>
+    @if (cartService.lines().length === 0 && !successMessage) {
+      <div class="checkout-empty">
+        <p class="checkout-empty__text">Your cart is empty.</p>
+        <a routerLink="/shop" class="checkout-empty__cta">Shop now</a>
+      </div>
+    } @else if (!successMessage) {
+      <div class="checkout-card">
+        <p class="checkout-card__subtotal">
+          Order total: <span class="checkout-card__amount">{{ cartService.subtotal() | currency: 'EUR' }}</span>
+        </p>
 
-  <form [formGroup]="form" (ngSubmit)="submit()">
-    <div style="display: grid; gap: 12px; max-width: 420px;">
-      <label>
-        Ime i prezime
-        <input type="text" formControlName="customerName" />
-      </label>
-      @if (form.controls.customerName.touched && form.controls.customerName.invalid) {
-        <small style="color: red;">Obavezno polje.</small>
-      }
+        <form [formGroup]="form" (ngSubmit)="submit()" class="checkout-form">
+          <div class="checkout-field">
+            <label class="checkout-label" for="co-name">Full name</label>
+            <input id="co-name" class="checkout-input" type="text" formControlName="customerName" autocomplete="name" />
+            @if (form.controls.customerName.touched && form.controls.customerName.invalid) {
+              <small class="checkout-error">Required field.</small>
+            }
+          </div>
 
-      <label>
-        Telefon
-        <input type="text" formControlName="phone" />
-      </label>
-      @if (form.controls.phone.touched && form.controls.phone.invalid) {
-        <small style="color: red;">Obavezno polje.</small>
-      }
+          <div class="checkout-field">
+            <label class="checkout-label" for="co-phone">Phone</label>
+            <input id="co-phone" class="checkout-input" type="tel" formControlName="phone" autocomplete="tel" />
+            @if (form.controls.phone.touched && form.controls.phone.invalid) {
+              <small class="checkout-error">Required field.</small>
+            }
+          </div>
 
-      <label>
-        Adresa
-        <input type="text" formControlName="address" />
-      </label>
-      @if (form.controls.address.touched && form.controls.address.invalid) {
-        <small style="color: red;">Obavezno polje.</small>
-      }
+          <div class="checkout-field">
+            <label class="checkout-label" for="co-address">Address</label>
+            <input id="co-address" class="checkout-input" type="text" formControlName="address" autocomplete="street-address" />
+            @if (form.controls.address.touched && form.controls.address.invalid) {
+              <small class="checkout-error">Required field.</small>
+            }
+          </div>
 
-      <label>
-        Grad
-        <input type="text" formControlName="city" />
-      </label>
-      @if (form.controls.city.touched && form.controls.city.invalid) {
-        <small style="color: red;">Obavezno polje.</small>
-      }
+          <div class="checkout-field">
+            <label class="checkout-label" for="co-city">City</label>
+            <input id="co-city" class="checkout-input" type="text" formControlName="city" autocomplete="address-level2" />
+            @if (form.controls.city.touched && form.controls.city.invalid) {
+              <small class="checkout-error">Required field.</small>
+            }
+          </div>
 
-      <button type="submit" [disabled]="isSubmitting || form.invalid">
-        Pošalji narudžbu
-      </button>
-    </div>
-  </form>
-}
+          <button type="submit" class="checkout-submit" [disabled]="isSubmitting || form.invalid">
+            {{ isSubmitting ? 'Placing order…' : 'Place order' }}
+          </button>
+        </form>
+      </div>
+    }
 
-@if (successMessage) {
-  <p style="color: green; margin-top: 16px;">{{ successMessage }}</p>
-  <p><button type="button" (click)="goShop()">Nastavi kupovinu</button></p>
-}
+    @if (successMessage) {
+      <div class="checkout-success">
+        <p class="checkout-success__msg">{{ successMessage }}</p>
+        <button type="button" class="checkout-success__shop" (click)="goShop()">Continue shopping</button>
+      </div>
+    }
 
-@if (errorMessage) {
-  <p style="color: red; margin-top: 16px;">{{ errorMessage }}</p>
-}
+    @if (errorMessage) {
+      <p class="checkout-banner checkout-banner--error">{{ errorMessage }}</p>
+    }
+  </div>
+</section>

@@ -1,16 +1,20 @@
-<nav style="display: flex; gap: 12px; margin-bottom: 16px;">
-  <a routerLink="/">Home</a>
-  <a routerLink="/shop">Shop</a>
-  <a routerLink="/product/id">Product</a>
-  <a routerLink="/cart">Cart</a>
-  <a routerLink="/checkout">Checkout</a>
-  <a routerLink="/admin">Admin</a>
+<header class="site-header">
+  <nav class="topnav" aria-label="Main">
+    <a class="topnav__brand" routerLink="/">DARTS SHOP</a>
 
-  @if (auth.isLoggedIn()) {
-  <button type="button" (click)="logout()">Logout</button>
-} @else {
-  <a routerLink="/login">Login</a>
-}
-</nav>
+    <div class="topnav__links">
+      <a routerLink="/" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
+      <a routerLink="/shop" routerLinkActive="is-active">Shop</a>
+      <a routerLink="/cart" routerLinkActive="is-active">Cart</a>
+      <a routerLink="/checkout" routerLinkActive="is-active">Checkout</a>
+      <a routerLink="/admin" routerLinkActive="is-active">Admin</a>
+      <a routerLink="/login" routerLinkActive="is-active">Login</a>
+    </div>
 
-<router-outlet></router-outlet>
+    <button class="topnav__logout" type="button" (click)="logout()">Logout</button>
+  </nav>
+</header>
+
+<main class="app-main">
+  <router-outlet></router-outlet>
+</main>

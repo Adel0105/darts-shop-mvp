@@ -1,95 +1,127 @@
-<h2>Admin panel</h2>
-<h2>Admin - Products</h2>
+<section class="admin-page">
+  <div class="admin-page__inner">
+    <nav class="admin-page__nav" aria-label="Breadcrumb">
+      <a routerLink="/" class="admin-page__back">← Back to Home</a>
+    </nav>
 
-@if (error) {
-  <p style="color: red;">{{ error }}</p>
-}
-@if (success) {
-  <p style="color: green;">{{ success }}</p>
-}
+    <h1 class="admin-page__title">Admin panel</h1>
+    <p class="admin-page__lead">Manage product stock and order status. Your session uses the token from login.</p>
 
-<table border="1" cellpadding="8" cellspacing="0" style="width: 100%; max-width: 900px;">
-  <thead>
-    <tr>
-      <th>ID</th>
-      <th>Naziv</th>
-      <th>Cijena</th>
-      <th>Trenutni stock</th>
-      <th>Novi stock</th>
-      <th>Akcija</th>
-    </tr>
-  </thead>
-  <tbody>
-    @for (p of products; track p.id) {
-      <tr>
-        <td>{{ p.id }}</td>
-        <td>{{ p.name }}</td>
-        <td>{{ p.price }}</td>
-        <td>{{ p.stock }}</td>
-        <td>
-          <input
-            type="number"
-            min="0"
-            [value]="stockDraft[p.id]"
-            (input)="stockDraft[p.id] = +$any($event.target).value"
-          />
-        </td>
-        <td>
-        <button
-            type="button"
-            (click)="saveStock(p.id)"
-            [disabled]="+stockDraft[p.id] === +p.stock || isSavingStock[p.id]"
-            >
-            Sačuvaj
-        </button>
-        </td>
-      </tr>
+    @if (error) {
+      <p class="admin-banner admin-banner--error">{{ error }}</p>
     }
-  </tbody>
-</table>
+    @if (success) {
+      <p class="admin-banner admin-banner--success">{{ success }}</p>
+    }
 
-<hr style="margin: 24px 0;" />
+    <section class="admin-section" aria-labelledby="admin-products-heading">
+      <h2 id="admin-products-heading" class="admin-section__title">Products</h2>
+      <div class="admin-card">
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>New stock</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of products; track p.id) {
+                <tr>
+                  <td data-label="ID">{{ p.id }}</td>
+                  <td data-label="Name">{{ p.name }}</td>
+                  <td data-label="Price">{{ p.price | currency: 'EUR' }}</td>
+                  <td data-label="Stock">{{ p.stock }}</td>
+                  <td data-label="New stock">
+                    <input
+                      class="admin-input admin-input--num"
+                      type="number"
+                      min="0"
+                      step="1"
+                      [value]="stockDraft[p.id]"
+                      (input)="onStockInput(p.id, $event)"
+                    />
+                  </td>
+                  <td>
+                    <button
+                      type="button"
+                      class="admin-btn"
+                      (click)="saveStock(p.id)"
+                      [disabled]="+stockDraft[p.id] === +p.stock || isSavingStock[p.id]"
+                    >
+                      {{ isSavingStock[p.id] ? 'Saving…' : 'Save' }}
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (products.length === 0 && !error) {
+          <p class="admin-empty">No products loaded.</p>
+        }
+      </div>
+    </section>
 
-<h3>Admin - Orders</h3>
-
-@if (orders.length === 0) {
-  <p>Nema narudžbi.</p>
-} @else {
-  <table border="1" cellpadding="8" cellspacing="0" style="width: 100%; max-width: 1000px;">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Kupac</th>
-        <th>Telefon</th>
-        <th>Grad</th>
-        <th>Total</th>
-        <th>Status</th>
-        <th>Akcija</th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (o of orders; track o.id) {
-        <tr>
-          <td>{{ o.id }}</td>
-          <td>{{ o.customerName }}</td>
-          <td>{{ o.phone }}</td>
-          <td>{{ o.city }}</td>
-          <td>{{ o.total | number:'1.2-2' }}</td>
-          <td>
-            <select
-              [value]="statusDraft[o.id]"
-              (change)="statusDraft[o.id] = $any($event.target).value"
-            >
-              <option value="New">New</option>
-              <option value="Processing">Processing</option>
-              <option value="Done">Done</option>
-            </select>
-          </td>
-          <td>
-            <button type="button" (click)="saveOrderStatus(o.id)" [disabled]="statusDraft[o.id] === o.status">Sačuvaj</button>
-          </td>
-        </tr>
-      }
-    </tbody>
-  </table>
-}
+    <section class="admin-section" aria-labelledby="admin-orders-heading">
+      <h2 id="admin-orders-heading" class="admin-section__title">Orders</h2>
+      <div class="admin-card">
+        @if (orders.length === 0) {
+          <p class="admin-empty">No orders yet.</p>
+        } @else {
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Customer</th>
+                  <th>Phone</th>
+                  <th>City</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (o of orders; track o.id) {
+                  <tr>
+                    <td data-label="ID">{{ o.id }}</td>
+                    <td data-label="Customer">{{ o.customerName }}</td>
+                    <td data-label="Phone">{{ o.phone }}</td>
+                    <td data-label="City">{{ o.city }}</td>
+                    <td data-label="Total">{{ o.total | currency: 'EUR' }}</td>
+                    <td data-label="Status">
+                      <select
+                        class="admin-select"
+                        [value]="statusDraft[o.id]"
+                        (change)="onStatusChange(o.id, $event)"
+                      >
+                        <option value="New">New</option>
+                        <option value="Processing">Processing</option>
+                        <option value="Done">Done</option>
+                      </select>
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        class="admin-btn"
+                        (click)="saveOrderStatus(o.id)"
+                        [disabled]="statusDraft[o.id] === o.status"
+                      >
+                        Save
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    </section>
+  </div>
+</section>

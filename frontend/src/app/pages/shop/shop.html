@@ -1,68 +1,120 @@
-<h2>Shop</h2>
+<section class="shop">
+  <div class="shop__toolbar">
+    <div class="shop__lead">
+      <h1 class="shop__title">Shop</h1>
+      @if (!isLoading && !error) {
+        <p class="shop__meta">
+          <span class="shop__meta-count">{{ filteredProducts.length }}</span>
+          <span class="shop__meta-label">products shown</span>
+        </p>
+      }
+    </div>
 
-<div style="display: flex;gap: 10px;align-items: center;margin-bottom: 14px;">
-  <label for="category">Kategorija:</label>
-    <label for="sort">Sort:</label>
-      <select
-        id="sort"
-        [value]="sortOption"
-        (change)="onSortChange($any($event.target).value)"
-      >
-        <option value="none">Bez sortiranja</option>
-        <option value="priceAsc">Cijena: niža -> viša</option>
-        <option value="priceDesc">Cijena: viša -> niža</option>
-        <option value="nameAsc">Naziv: A-Z</option>
-      </select>
-
-  <select name="" id="category" [value]="selectedCategoryId ?? ''"
-  (change)="onCategoryChange($any($event.target).value)">
-    <option value="">Sve kategorije</option>
-      @for (c of categories; track c.id)
-      { <option [value]="c.id">{{c.name}}</option> }
-  </select>
-<label for="search">Search:</label>
-  <input
-    id="search"
-    type="text"
-    placeholder="Naziv proizvoda"
-    [value]="searchText"
-    (input)="onSearchChange($any($event.target).value)"
-  />
-  <button type="button" (click)="clearCategoryFilter()">Clear</button>
-</div>
-@if (!isLoading && !error) {
-  <p style="margin: 6px 0 14px; color: #666;">
-    Prikazano proizvoda: {{ filteredProducts.length }}
-  </p>
-}
-@if (isLoading) {
-  <p>Učitavanje proizvoda...</p>
-}
-
-@if (!isLoading && error) {
-  <p style="color: red;">{{ error }}</p>
-}
-
-@if (!isLoading && !error && filteredProducts.length === 0) {
-  <p>>Nema rezultata za trenutni filter/search. Pokušaj Clear.</p>
-}
-
-@if (!isLoading && !error && filteredProducts.length > 0) {
-  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;">
-    @for (p of filteredProducts; track p.id) {
-      <article style="border:1px solid #ddd;border-radius:12px;padding:12px;">
-        <img
-          [src]="p.imageUrl"
-          [alt]="p.name"
-          style="width:100%;height:140px;object-fit:cover;border-radius:8px;"
+    <div class="shop__filters" aria-label="Search and filters">
+      <div class="shop__field">
+        <label class="shop__label" for="shop-search">Search</label>
+        <input
+          id="shop-search"
+          class="shop__input"
+          type="search"
+          placeholder="Product name…"
+          autocomplete="off"
+          [value]="searchText"
+          (input)="onSearchChange($any($event.target).value)"
         />
-        <h3 style="margin:10px 0 6px;">{{ p.name }}</h3>
-        <p style="margin:0 0 6px;color:#666;">{{ p.categoryName }}</p>
-        <p style="margin:0 0 8px;"><strong>{{ p.price | currency:'EUR' }}</strong></p>
-        <p style="margin:0 0 10px;">Stock: {{ p.stock }}</p>
+      </div>
 
-        <a [routerLink]="['/product', p.id]">Detalji</a>
-      </article>
-    }
+      <div class="shop__field">
+        <label class="shop__label" for="shop-category">Category</label>
+        <select
+          id="shop-category"
+          class="shop__select"
+          [value]="selectedCategoryId ?? ''"
+          (change)="onCategoryChange($any($event.target).value)"
+        >
+          <option value="">All categories</option>
+          @for (c of categories; track c.id) {
+            <option [value]="c.id">{{ c.name }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="shop__field shop__field--price">
+        <span class="shop__label">Price (€)</span>
+        <div class="shop__price-row">
+          <input
+            id="shop-min-price"
+            class="shop__input shop__input--price"
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="Min"
+            [value]="minPriceInput"
+            (input)="onMinPriceChange($any($event.target).value)"
+          />
+          <span class="shop__price-sep" aria-hidden="true">–</span>
+          <input
+            id="shop-max-price"
+            class="shop__input shop__input--price"
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="Max"
+            [value]="maxPriceInput"
+            (input)="onMaxPriceChange($any($event.target).value)"
+          />
+        </div>
+      </div>
+
+      <div class="shop__field">
+        <label class="shop__label" for="shop-sort">Sort</label>
+        <select
+          id="shop-sort"
+          class="shop__select"
+          [value]="sortOption"
+          (change)="onSortChange($any($event.target).value)"
+        >
+          <option value="none">Default</option>
+          <option value="priceAsc">Price: low → high</option>
+          <option value="priceDesc">Price: high → low</option>
+          <option value="nameAsc">Name: A–Z</option>
+        </select>
+      </div>
+
+      <button type="button" class="shop__clear" (click)="clearCategoryFilter()">Clear all</button>
+    </div>
   </div>
-}
+
+  @if (isLoading) {
+    <p class="shop__state">Loading products…</p>
+  }
+
+  @if (!isLoading && error) {
+    <p class="shop__state shop__state--error">{{ error }}</p>
+  }
+
+  @if (!isLoading && !error && filteredProducts.length === 0) {
+    <p class="shop__state">No products match your filters. Try adjusting search or price range, or use Clear all.</p>
+  }
+
+  @if (!isLoading && !error && filteredProducts.length > 0) {
+    <div class="shop__grid">
+      @for (p of filteredProducts; track p.id) {
+        <article class="product-card">
+          <a class="product-card__media" [routerLink]="['/product', p.id]">
+            <img [src]="p.imageUrl" [alt]="p.name" />
+          </a>
+          <div class="product-card__body">
+            <h2 class="product-card__name">
+              <a [routerLink]="['/product', p.id]">{{ p.name }}</a>
+            </h2>
+            <p class="product-card__category">{{ p.categoryName }}</p>
+            <p class="product-card__price">{{ p.price | currency: 'EUR' }}</p>
+            <p class="product-card__stock">In stock: {{ p.stock }}</p>
+            <a class="product-card__link" [routerLink]="['/product', p.id]">View details</a>
+          </div>
+        </article>
+      }
+    </div>
+  }
+</section>

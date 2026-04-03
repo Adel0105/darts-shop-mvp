@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, CurrencyPipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
@@ -36,7 +36,7 @@ export class Checkout {
     this.errorMessage = '';
 
     if (this.cartService.lines().length === 0) {
-      this.errorMessage = 'Korpa je prazna.';
+      this.errorMessage = 'Your cart is empty.';
       return;
     }
 
@@ -63,7 +63,7 @@ export class Checkout {
     this.http.post<{ id: number; total: number }>(`${this.apiUrl}/orders`, payload).subscribe({
       next: (res) => {
         this.cartService.clear();
-        this.successMessage = `Narudžba kreirana. Broj: ${res.id}. Ukupno: ${res.total.toFixed(2)} EUR.`;
+        this.successMessage = `Order placed successfully. Order #${res.id}. Total: ${res.total.toFixed(2)} EUR.`;
         this.form.reset();
         this.isSubmitting = false;
       },
@@ -71,7 +71,7 @@ export class Checkout {
         const msg =
           err?.error?.message ??
           (typeof err?.error === 'string' ? err.error : null) ??
-          'Greška pri slanju narudžbe.';
+          'Could not place order.';
         this.errorMessage = msg;
         this.isSubmitting = false;
       },

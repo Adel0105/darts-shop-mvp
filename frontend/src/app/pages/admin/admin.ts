@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { RouterLink } from '@angular/router';
 import { Product } from '../../core/models/product.model';
 import { ChangeDetectorRef } from '@angular/core';
 
@@ -25,7 +26,7 @@ type AdminOrder = {
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './admin.html',
   styleUrl: './admin.scss',
 })
@@ -43,110 +44,127 @@ export class Admin implements OnInit {
   private cdr = inject(ChangeDetectorRef);
 
   ngOnInit(): void {
+    this.error = '';
+    this.success = '';
     this.loadProducts();
     this.loadOrders();
   }
 
+  onStockInput(productId: number, event: Event): void {
+    const el = event.target as HTMLInputElement;
+    const v = Number(el.value);
+    if (!Number.isNaN(v) && v >= 0) {
+      this.stockDraft[productId] = v;
+    }
+  }
+
+  onStatusChange(orderId: number, event: Event): void {
+    const el = event.target as HTMLSelectElement;
+    this.statusDraft[orderId] = el.value;
+  }
+
   loadProducts(): void {
-    this.error = '';
-    this.success = '';
     this.http.get<Product[]>(`${this.apiUrl}/products`).subscribe({
       next: (data) => {
         this.products = data;
         this.stockDraft = {};
-        for (const p of data) this.stockDraft[p.id] = p.stock;
-      },
-      error: () => {
-        this.error = 'Greška pri učitavanju proizvoda.';
-      },
-    });
-  }
-saveStock(productId: number): void {
-  this.error = '';
-  this.success = '';
-  if (this.isSavingStock[productId]) return;
-  const newStock = Number(this.stockDraft[productId]);
-  if (Number.isNaN(newStock) || newStock < 0) {
-    this.error = 'Stock mora biti broj >= 0.';
-    return;
-  }
-
-  const ok = confirm(`Potvrdi promjenu stock-a na: ${newStock}?`);
-  if (!ok) return;
-
-  this.isSavingStock[productId] = true;
-  this.http
-    .patch<{ id: number; stock: number }>(
-      `${this.apiUrl}/admin/products/${productId}/stock`,
-      { stock: newStock }
-    )
-    .subscribe({
-      next: () => {
-        this.success = 'Stock uspješno ažuriran.';
-
-        const p = this.products.find(x => x.id === productId);
-        if (p) {
-          p.stock = newStock;              // odmah update u tabeli
-          this.stockDraft[productId] = newStock; // da dugme postane disabled
+        for (const p of data) {
+          this.stockDraft[p.id] = p.stock;
         }
-        this.isSavingStock[productId] = false;
-        this.cdr.detectChanges();
+        this.cdr.markForCheck();
       },
       error: () => {
-        this.error = 'Greška pri ažuriranju stock-a.';
-        this.isSavingStock[productId] = false;
-      }
+        this.error = 'Could not load products.';
+      },
     });
-}
-  
-
-loadOrders(): void {
-  this.error = '';
-  this.success = '';
-  this.http.get<AdminOrder[]>(`${this.apiUrl}/admin/orders`).subscribe({
-    next: (data) => {
-      this.orders = data;
-      this.statusDraft = {};
-      for (const o of data) this.statusDraft[o.id] = o.status;
-    },
-    error: () => {
-      this.error = 'Greška pri učitavanju narudžbi.';
-    },
-  });
-}
-
-saveOrderStatus(orderId: number): void {
-  this.error = '';
-  this.success = '';
-
-  const status = this.statusDraft[orderId];
-  if (!status) {
-    this.error = 'Odaberi status.';
-    return;
   }
 
-  const ok = confirm(`Potvrdi promjenu statusa na: ${status}?`);
-  if (!ok) return;
+  saveStock(productId: number): void {
+    this.error = '';
+    this.success = '';
+    if (this.isSavingStock[productId]) return;
+    const newStock = Number(this.stockDraft[productId]);
+    if (Number.isNaN(newStock) || newStock < 0) {
+      this.error = 'Stock must be a number ≥ 0.';
+      return;
+    }
 
-  this.http
-    .patch<{ id: number; status: string }>(
-      `${this.apiUrl}/admin/orders/${orderId}/status`,
-      { status }
-    )
-    .subscribe({
-      next: () => {
-        this.success = 'Status narudžbe ažuriran.';
+    const ok = confirm(`Set stock to ${newStock}?`);
+    if (!ok) return;
 
-        const o = this.orders.find(x => x.id === orderId);
-        if (o) {
-          o.status = status;               // odmah update u tabeli
-          this.statusDraft[orderId] = status; // da dugme postane disabled
+    this.isSavingStock[productId] = true;
+    this.http
+      .patch<{ id: number; stock: number }>(
+        `${this.apiUrl}/admin/products/${productId}/stock`,
+        { stock: newStock }
+      )
+      .subscribe({
+        next: () => {
+          this.success = 'Stock updated.';
+
+          const p = this.products.find((x) => x.id === productId);
+          if (p) {
+            p.stock = newStock;
+            this.stockDraft[productId] = newStock;
+          }
+          this.isSavingStock[productId] = false;
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.error = 'Could not update stock. Are you logged in as admin?';
+          this.isSavingStock[productId] = false;
+        },
+      });
+  }
+
+  loadOrders(): void {
+    this.http.get<AdminOrder[]>(`${this.apiUrl}/admin/orders`).subscribe({
+      next: (data) => {
+        this.orders = data;
+        this.statusDraft = {};
+        for (const o of data) {
+          this.statusDraft[o.id] = o.status;
         }
-        this.cdr.detectChanges();
+        this.cdr.markForCheck();
       },
       error: () => {
-        this.error = 'Greška pri ažuriranju statusa.';
-      }
+        this.error = 'Could not load orders. Are you logged in as admin?';
+      },
     });
-}
+  }
+
+  saveOrderStatus(orderId: number): void {
+    this.error = '';
+    this.success = '';
+
+    const status = this.statusDraft[orderId];
+    if (!status) {
+      this.error = 'Select a status.';
+      return;
+    }
+
+    const ok = confirm(`Set order status to "${status}"?`);
+    if (!ok) return;
+
+    this.http
+      .patch<{ id: number; status: string }>(
+        `${this.apiUrl}/admin/orders/${orderId}/status`,
+        { status }
+      )
+      .subscribe({
+        next: () => {
+          this.success = 'Order status updated.';
+
+          const o = this.orders.find((x) => x.id === orderId);
+          if (o) {
+            o.status = status;
+            this.statusDraft[orderId] = status;
+          }
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.error = 'Could not update order status.';
+        },
+      });
+  }
 }

@@ -1,61 +1,63 @@
-<h2>Korpa</h2>
+<section class="cart-page">
+  <div class="cart-page__inner">
+    <nav class="cart-page__nav" aria-label="Breadcrumb">
+      <a routerLink="/shop" class="cart-page__back">← Back to Shop</a>
+    </nav>
 
-<p><a routerLink="/shop">← Nazad u Shop</a></p>
+    <h1 class="cart-page__title">Cart</h1>
 
-@if (cartService.lines().length === 0) {
-  <p>Korpa je prazna.</p>
-  <p><a routerLink="/shop">Idi u Shop</a></p>
-} @else {
-  <ul style="list-style: none; padding: 0; max-width: 640px;">
-    @for (line of cartService.lines(); track line.productId) {
-      <li
-        style="display: flex; gap: 12px; align-items: center; border: 1px solid #ddd; border-radius: 12px; padding: 12px; margin-bottom: 12px;"
-      >
-        <img
-          [src]="line.imageUrl"
-          [alt]="line.name"
-          style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;"
-        />
-        <div style="flex: 1;">
-          <strong>{{ line.name }}</strong>
-          <div style="color: #666; font-size: 14px;">
-            {{ line.unitPrice | currency: 'EUR' }} × {{ line.quantity }}
-          </div>
-        </div>
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <button
-            type="button"
-            (click)="dec(line.productId, line.quantity)"
-            aria-label="Smanji"
-          >
-            −
-          </button>
-          <span>{{ line.quantity }}</span>
-          <button
-            type="button"
-            (click)="inc(line.productId, line.quantity, line.maxStock)"
-            [disabled]="line.quantity >= line.maxStock"
-            aria-label="Povećaj"
-          >
-            +
-          </button>
-          <button type="button" (click)="remove(line.productId)">Ukloni</button>
-        </div>
-      </li>
+    @if (cartService.lines().length === 0) {
+      <div class="cart-empty">
+        <p class="cart-empty__text">Your cart is empty.</p>
+        <a routerLink="/shop" class="cart-empty__cta">Shop now</a>
+      </div>
+    } @else {
+      <ul class="cart-list" role="list">
+        @for (line of cartService.lines(); track line.productId) {
+          <li class="cart-item">
+            <a class="cart-item__media" [routerLink]="['/product', line.productId]">
+              <img [src]="line.imageUrl" [alt]="line.name" />
+            </a>
+            <div class="cart-item__main">
+              <a class="cart-item__name" [routerLink]="['/product', line.productId]">{{ line.name }}</a>
+              <p class="cart-item__meta">
+                {{ line.unitPrice | currency: 'EUR' }} × {{ line.quantity }} =
+                <span class="cart-item__line-total">{{ line.unitPrice * line.quantity | currency: 'EUR' }}</span>
+              </p>
+            </div>
+            <div class="cart-item__controls">
+              <div class="cart-item__qty" role="group" [attr.aria-label]="'Quantity for ' + line.name">
+                <button
+                  type="button"
+                  class="cart-item__qty-btn"
+                  (click)="dec(line.productId, line.quantity)"
+                  aria-label="Decrease quantity"
+                >
+                  −
+                </button>
+                <span class="cart-item__qty-val">{{ line.quantity }}</span>
+                <button
+                  type="button"
+                  class="cart-item__qty-btn"
+                  (click)="inc(line.productId, line.quantity, line.maxStock)"
+                  [disabled]="line.quantity >= line.maxStock"
+                  aria-label="Increase quantity"
+                >
+                  +
+                </button>
+              </div>
+              <button type="button" class="cart-item__remove" (click)="remove(line.productId)">Remove</button>
+            </div>
+          </li>
+        }
+      </ul>
+
+      <div class="cart-summary">
+        <p class="cart-summary__total">
+          Total: <span class="cart-summary__amount">{{ cartService.subtotal() | currency: 'EUR' }}</span>
+        </p>
+        <a routerLink="/checkout" class="cart-summary__checkout">Checkout</a>
+      </div>
     }
-  </ul>
-
-  <p style="font-size: 18px;">
-    <strong>Ukupno: {{ cartService.subtotal() | currency: 'EUR' }}</strong>
-  </p>
-
-  <p>
-    <a
-      routerLink="/checkout"
-      [style.pointer-events]="cartService.lines().length === 0 ? 'none' : 'auto'"
-      [style.opacity]="cartService.lines().length === 0 ? '0.5' : '1'"
-    >
-      Na checkout
-    </a>
-  </p>
-}
+  </div>
+</section>

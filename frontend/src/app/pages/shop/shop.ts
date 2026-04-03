@@ -23,8 +23,11 @@ export class Shop implements OnInit,OnDestroy {
   selectedCategoryId:number | null=null;
   isLoading = true;
   error = '';
-  searchText = '';      // odmah u inputu
-  searchQuery = ''; 
+  searchText = '';
+  searchQuery = '';
+  /** Bound inputs; parsed in applyFilter */
+  minPriceInput = '';
+  maxPriceInput = '';
   private searchSubject = new Subject<string>();
   
   ngOnInit(): void {
@@ -54,8 +57,8 @@ export class Shop implements OnInit,OnDestroy {
       next:(cats)=>{
         this.categories=cats;
       },
-      error:()=>{
-        this.error="Greska pri ucitavanju kategorija!";
+      error: () => {
+        this.error = 'Could not load categories.';
       },
 
     });
@@ -66,7 +69,7 @@ export class Shop implements OnInit,OnDestroy {
         this.isLoading = false;
       },
       error: () => {
-        this.error = 'Greška pri učitavanju proizvoda.';
+        this.error = 'Could not load products.';
         this.isLoading = false;
       },
     });
@@ -77,9 +80,11 @@ export class Shop implements OnInit,OnDestroy {
   }
   clearCategoryFilter(): void {
     this.selectedCategoryId = null;
-    this.sortOption='none';
-    this.searchQuery='';
-    this.searchText='';
+    this.sortOption = 'none';
+    this.searchQuery = '';
+    this.searchText = '';
+    this.minPriceInput = '';
+    this.maxPriceInput = '';
     this.searchSubject.next('');
     this.applyFilter();
   }
@@ -91,17 +96,48 @@ export class Shop implements OnInit,OnDestroy {
       (p)=>p.categoryId===this.selectedCategoryId
     );
     }
-    if(this.searchQuery){
-      const q=this.searchQuery.toLocaleLowerCase();
-      result=result.filter((p)=>p.name.toLocaleLowerCase().includes(q));
+    if (this.searchQuery) {
+      const q = this.searchQuery.toLocaleLowerCase();
+      result = result.filter((p) => p.name.toLocaleLowerCase().includes(q));
     }
-    //sortiranje 
-    if(this.sortOption==='priceAsc'){result=[...result].sort((a,b)=>a.price-b.price)}
-    else if(this.sortOption==='priceDesc'){result=[...result.sort((a,b)=>b.price-a.price)]}
-    else if (this.sortOption === 'nameAsc') {
-    result = [...result].sort((a, b) => a.name.localeCompare(b.name));
+
+    const minP = this.parsePrice(this.minPriceInput);
+    const maxP = this.parsePrice(this.maxPriceInput);
+    if (minP !== null) {
+      result = result.filter((p) => p.price >= minP);
+    }
+    if (maxP !== null) {
+      result = result.filter((p) => p.price <= maxP);
+    }
+
+    // sort
+    if (this.sortOption === 'priceAsc') {
+      result = [...result].sort((a, b) => a.price - b.price);
+    } else if (this.sortOption === 'priceDesc') {
+      result = [...result].sort((a, b) => b.price - a.price);
+    } else if (this.sortOption === 'nameAsc') {
+      result = [...result].sort((a, b) => a.name.localeCompare(b.name));
+    }
+    this.filteredProducts = result;
   }
-  this.filteredProducts=result;
+
+  private parsePrice(raw: string): number | null {
+    const t = raw.trim();
+    if (t === '') {
+      return null;
+    }
+    const n = Number(t.replace(',', '.'));
+    return Number.isFinite(n) ? n : null;
+  }
+
+  onMinPriceChange(value: string): void {
+    this.minPriceInput = value;
+    this.applyFilter();
+  }
+
+  onMaxPriceChange(value: string): void {
+    this.maxPriceInput = value;
+    this.applyFilter();
   }
 
   onSortChange(value:string):void{

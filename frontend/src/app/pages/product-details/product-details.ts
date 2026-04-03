@@ -42,7 +42,7 @@ export class ProductDetails implements OnInit {
         if (err.status === 404) {
           this.notFound = true;
         } else {
-          this.error = 'Greška pri učitavanju proizvoda.';
+          this.error = 'Could not load product.';
         }
         this.cdr.markForCheck();
       },
