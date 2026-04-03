@@ -26,6 +26,7 @@ darts-shop-mvp/
 - [Node.js](https://nodejs.org/) (LTS) and npm
 - [SQL Server](https://www.microsoft.com/sql-server) (LocalDB, Express, Docker, or full instance)
 
+<<<<<<< HEAD
 ## Configuration (secrets)
 
 **Do not commit real passwords or JWT signing keys to git.** The repo ships with safe defaults in `backend/appsettings.json` and a template `backend/appsettings.Development.json.example`.
@@ -49,12 +50,24 @@ For local development:
 
 1. Ensure SQL Server is running and matches your connection string.
 2. Apply migrations:
+=======
+## Database setup
+
+1. Ensure SQL Server is running and reachable.
+2. Set `ConnectionStrings:DefaultConnection` in `backend/appsettings.json`, or override with [User Secrets](https://learn.microsoft.com/en-us/aspnet/core/security/app-secrets) or environment variables (recommended for secrets).
+3. Apply migrations from the `backend` directory:
+>>>>>>> c2f94e153955ccfa98ecaa47e3989433c0202855
 
 ```bash
 cd backend
 dotnet ef database update
 ```
 
+<<<<<<< HEAD
+=======
+**Security:** do not commit production credentials or JWT signing keys to a public repository.
+
+>>>>>>> c2f94e153955ccfa98ecaa47e3989433c0202855
 ## Run the API (backend)
 
 ```bash
@@ -76,7 +89,11 @@ npm start
 
 - Application URL: `http://localhost:4200`
 
+<<<<<<< HEAD
 The Angular app expects the API base URL in `frontend/src/app/core` (default `http://localhost:5231`). Change both sides if you use another port.
+=======
+The Angular app calls the API using the base URL configured in `frontend/src/app/core` (default `http://localhost:5231`). Update both the backend port and the frontend URL if you change either.
+>>>>>>> c2f94e153955ccfa98ecaa47e3989433c0202855
 
 ## Features
 
@@ -101,7 +118,11 @@ The Angular app expects the API base URL in `frontend/src/app/core` (default `ht
 
 ## Default admin credentials (MVP / local dev only)
 
+<<<<<<< HEAD
 Defined in `backend/Program.cs` for local development only. **Change before any real deployment.**
+=======
+Hard-coded for local development in `backend/Program.cs`. **Change or remove before any real deployment.**
+>>>>>>> c2f94e153955ccfa98ecaa47e3989433c0202855
 
 ## License
 
